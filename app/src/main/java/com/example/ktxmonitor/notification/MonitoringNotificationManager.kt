@@ -1,4 +1,4 @@
-﻿package com.example.ktxmonitor.notification
+package com.example.ktxmonitor.notification
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -67,6 +67,17 @@ class MonitoringNotificationManager(private val context: Context) {
         val title = "🎉 [KTX 좌석 발견] ${target.departureStation} → ${target.arrivalStation}"
         val content = "${target.date} $trainInfo (${target.seatType}, ${target.passengerCount}명)"
 
+        val korailIntent = context.packageManager.getLaunchIntentForPackage("com.korail.talk")
+            ?: Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://m.letskorail.com")).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+        val korailPendingIntent = PendingIntent.getActivity(
+            context,
+            target.id.hashCode() + 1,
+            korailIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
         val notification = NotificationCompat.Builder(context, SEAT_CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle(title)
@@ -75,6 +86,11 @@ class MonitoringNotificationManager(private val context: Context) {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
+            .addAction(
+                android.R.drawable.ic_menu_send,
+                "코레일 예매 이동",
+                korailPendingIntent
+            )
             .setDefaults(NotificationCompat.DEFAULT_ALL)
             .build()
 
